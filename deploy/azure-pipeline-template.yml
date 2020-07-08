@@ -1,0 +1,64 @@
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    #pool: 'Pool name'
+
+    steps:
+    - script: docker build -t hub.docker.com/sd2c_app:$(Build.SourceBranchName) .
+      displayName: "Build container"
+
+    - script: docker login hub.docker.com -u $(AZURE_REGISTRY_USER) -p $(AZURE_REGISTRY_PASSWORD) && docker push hub.docker.com/sd2c_app:$(Build.SourceBranchName)
+      displayName: "Push container"
+
+    - task: SSH@0
+      displayName: 'Stopping previous version'
+      inputs:
+        sshEndPoint: 'deploy_server_url'
+        runOptions: 'inline'
+        failOnStdErr: false
+        inline: |
+          cd /app/sd2c
+          APP_VERSION=$(Build.SourceBranchName) docker-compose -f docker-compose-prod.yml stop -t 30
+
+    - task: CopyFilesOverSSH@0
+      displayName: 'Publish file on production server'
+      inputs:
+        sshEndpoint: 'deploy_server_url'
+        sourceFolder: ./
+        contents: docker-compose-prod.yml
+        targetFolder: /app/sd2c
+
+    - task: SSH@0
+      displayName: 'Pull new version'
+      inputs:
+        sshEndPoint: 'deploy_server_url'
+        runOptions: 'inline'
+        failOnStdErr: false
+        inline: |
+          mkdir -p /app/sd2c
+          cd /app/sd2c
+          docker login hub.docker.com -u $(AZURE_REGISTRY_USER) -p $(AZURE_REGISTRY_PASSWORD)
+          APP_VERSION=$(Build.SourceBranchName) docker-compose -f docker-compose-prod.yml pull
+
+    - task: SSH@0
+      displayName: 'Starting service'
+      inputs:
+        sshEndPoint: 'deploy_server_url'
+        runOptions: 'inline'
+        failOnStdErr: false
+        inline: |
+          cd /app/sd2c
+          APP_VERSION=$(Build.SourceBranchName) docker-compose -f docker-compose-prod.yml up -d
+

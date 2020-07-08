@@ -271,8 +271,8 @@ class TestSpecificAWS(TestCase):
     command_arg = utils.default_args
 
     @unittest.mock.patch('libcloud.compute.drivers.ec2.EC2NodeDriver')
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'get_credentials')
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS,
+    @unittest.mock.patch.object(sshcrosscloud.libcloud_extended.SpecificAWS, 'get_credentials')
+    @unittest.mock.patch.object(sshcrosscloud.libcloud_extended.SpecificAWS,
                                 'get_region_from_config_file')
     def test_init_specific(self, get_region, get_credentials, ec2_node_driver):
         os.environ['IMAGE_NAME'] = 'Fedora'

@@ -5,7 +5,11 @@ from unittest import TestCase
 import unittest.mock
 from sd2c import utils
 from sd2c.ssh_cross_cloud import SSHCrossCloud
+
 import sd2c as sshcrosscloud
+from sd2c import utils
+from sd2c.libcloud_extended import ProviderSpecific, SpecificAWS, get_provider_specific_driver
+from sd2c.ssh_cross_cloud import SSHCrossCloud
 
 
 class TestSSHCrossCloud(TestCase):
@@ -47,22 +51,8 @@ class TestSSHCrossCloud(TestCase):
         assert ssh.wait_until_initialization() == 1
         os_system.assert_called_with("ssh a -v b c@d exit && echo $?")
 
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'get_node')
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'spe_wait_until_running')
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'create_instance')
-    def test_init_instance(self, spe_driver_create_instance, spe_driver_spe_wait_until_running, spe_driver_get_node):
-        ssh = SSHCrossCloud(**self.command_arg)
-        ssh.init_provider_specifics()
-        ssh.init_instance(with_instance=True)
-        spe_driver_get_node.assert_called()
-        spe_driver_spe_wait_until_running.assert_called()
-
-        ssh.init_instance(with_instance=False)
-        spe_driver_get_node.assert_called()
-        spe_driver_create_instance.assert_called()
-
     @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.SSHCrossCloud, 'init_instance')
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'start_instance')
+    @unittest.mock.patch.object(sshcrosscloud.libcloud_extended.SpecificAWS, 'start_instance')
     def test_manage_instance(self, spe_start_instance, ssh_init_instance):
         ssh = SSHCrossCloud(**self.command_arg)
         ssh.init_provider_specifics()
@@ -120,8 +110,8 @@ class TestSSHCrossCloud(TestCase):
         ssh.attach_to_instance()
         os_system.assert_called_with("ssh a e b c@d  -t 'tmux attach-session -t g || tmux new-session -s g'")
 
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'stop_instance')
-    @unittest.mock.patch.object(sshcrosscloud.ssh_cross_cloud.libcloud_extended.SpecificAWS, 'terminate_instance')
+    @unittest.mock.patch.object(sshcrosscloud.libcloud_extended.SpecificAWS, 'stop_instance')
+    @unittest.mock.patch.object(sshcrosscloud.libcloud_extended.SpecificAWS, 'terminate_instance')
     def test_finish_action(self, spe_terminate_instance, spe_stop_instance):
         ssh = SSHCrossCloud(**self.command_arg)
         ssh.init_provider_specifics()
@@ -249,7 +239,7 @@ class TestSSHCrossCloud(TestCase):
         ssh = SSHCrossCloud(**self.command_arg)
         ssh_params = ssh.ssh_params
 
-        ssh_params.l = "L_param"
+        ssh_params.l_param = "L_param"
         ssh_params.ssh_params = "a"
         ssh.manage_commands()
         assert ssh_params.ssh_params == "a -L L_param"

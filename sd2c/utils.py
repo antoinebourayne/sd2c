@@ -1,7 +1,5 @@
 import inspect
-import logging
 import os
-import sys
 
 from dotenv import dotenv_values, find_dotenv
 
@@ -12,7 +10,8 @@ Here are implemented strings and functions used in more than one file
 
 guide_aws = """
 To configure AWS credentials, you must follow the instructions below:
-1. You  need to create an AWS account, then IAM console -> Users -> User Actions -> Manage Access Keys -> Create Access Key
+1. You  need to create an AWS account, then IAM console -> Users -> User Actions -> Manage Access Keys
+-> Create Access Key
 Store this pair of keys in 'HOME/.aws/credentials' as follows:
 [default]
 aws_access_key_id = XXXXXXXXXXXXXXXXXXX
@@ -29,7 +28,8 @@ source ${RC}
 $ ssh-keygen -f ~/.ssh/$POLYGRAM -t rsa -b 4096
 5. Get public key and COPY it:
 $ ssh-keygen -f ~/.ssh/$POLYGRAM -y
-6. Go to AWS console under Network and Security -> Key Pair and import the public key that you copied and name it like your POLYGRAM
+6. Go to AWS console under Network and Security -> Key Pair and import the public key that you copied and name it like
+your POLYGRAM
 """
 
 guide_azure = """
@@ -61,7 +61,7 @@ help_text = """
 Launch instance, connects to it and leave it alive                          sshcrosscloud.py
 Launch instance, connects to it and stops it (state is saved)	            sshcrosscloud.py --stop
 Launch instance, connects to it and leave it alive           	            sshcrosscloud.py --leave
-Launch instance, launch your command on tmux session         	            sshcrosscloud.py --detach --multiplex "<some command>"
+Launch instance, launch your command on tmux session         	            sshcrosscloud.py --detach --multiplex "cmd"
 Launch instance, connects on a tmux session 	                            sshcrosscloud.py --detach
 Launch instance, connects on a tmux session and attach to it                sshcrosscloud.py --attach
 Synchronize instance directory to local and destroy instance              	sshcrosscloud.py --finish
@@ -132,7 +132,7 @@ class SSHParams:
         self.attach = params.get('attach')
         self.finish = params.get('finish')
         self.norsync = params.get('norsync')
-        self.l = params.get('l')
+        self.l_param = params.get('l')
         self.r = params.get('r')
         self.i = params.get('i')
         self.verbose = params.get('v')

@@ -17,8 +17,6 @@ This class is an upgrade of libcloud to simplify the use of SSH CROSS CLOUD
 """
 
 
-# TODO: show parameters function
-
 class ProviderSpecific(ABC):
     """
     A base ProviderSpecific class to derive from
@@ -243,6 +241,9 @@ class SpecificAWS(ProviderSpecific):
     def __init__(self, ssh_vas: utils.SSHParams):
         self.ssh_params = ssh_vas
         self.driver = None
+        self.image = None
+        self.size = None
+        self.security_group = None
 
     def init_specific_credentials(self):
         self.ssh_params.credentials_items = self.ssh_params.aws.credentials_items
@@ -396,6 +397,12 @@ class SpecificAzure(ProviderSpecific):
     def __init__(self, ssh_vas: utils.SSHParams):
         self.ssh_params = ssh_vas
         self.driver = None
+        self.image = None
+        self.size = None
+        self.location = None
+        self.resource_group = None
+        self.virtual_network = None
+        self.public_ip = None
 
     def init_specific_credentials(self):
         self.ssh_params.credentials_items = self.ssh_params.azure.credentials_items
@@ -406,8 +413,8 @@ class SpecificAzure(ProviderSpecific):
         self.ssh_params.instance_user = "azure"
         if not self.ssh_params.azure.region:
             raise Exception("No region found, you must specify a region in .env file")
-        self.ssh_params.azure.tenat_id, self.ssh_params.azure.subscription_id, self.ssh_params.azure.application_id, \
-        self.ssh_params.azure.secret = self.get_credentials()
+        self.ssh_params.azure.tenat_id, self.ssh_params.azure.subscription_id, \
+        self.ssh_params.azure.application_id, self.ssh_params.azure.secret = self.get_credentials()
         if not self.ssh_params.azure.public_ip_name:
             self.ssh_params.azure.public_ip_name = "sshcrosscloud-ip-" + self.ssh_params.username
         if not self.ssh_params.azure.virtual_network:
@@ -475,7 +482,8 @@ class SpecificAzure(ProviderSpecific):
             return tenant_id, subscription_id, client_id, secret
         else:
             raise Exception(
-                "No credentials found in " + self.ssh_params.credentials_file_path + ", run sshcrosscloud --config -- provider azure")
+                "No credentials found in " + self.ssh_params.credentials_file_path +
+                ", run sshcrosscloud --config -- provider azure")
 
     def start_instance(self) -> None:
         nodes = self.driver.list_nodes(self.ssh_params.azure.resource_group)
@@ -643,8 +651,8 @@ class SpecificGPC(ProviderSpecific):
 
         if not self.ssh_params.gcp.region:
             raise Exception("No region found, you must specify a region in .env file")
-        self.ssh_params.gcp.user_id, self.ssh_params.gcp.key_path, self.ssh_params.gcp.project, self.ssh_params.gcp.data_center \
-            = self.get_credentials()
+        self.ssh_params.gcp.user_id, self.ssh_params.gcp.key_path, self.ssh_params.gcp.project,\
+        self.ssh_params.gcp.data_center = self.get_credentials()
 
         cls = get_driver(Provider.GCE)
         provider_driver = cls(user_id=self.ssh_params.gcp.user_id,
@@ -745,8 +753,11 @@ def get_provider_specific_driver(ssh_vars: utils.SSHParams):
     if ssh_vars.provider == 'aws':
         return SpecificAWS(ssh_vars)
 
-    if ssh_vars.provider == 'azure':
+    elif ssh_vars.provider == 'azure':
         return SpecificAzure(ssh_vars)
 
-    if ssh_vars.provider == 'gcp':
+    elif ssh_vars.provider == 'gcp':
         return SpecificGPC(ssh_vars)
+
+    else:
+        raise Exception('No provider specified')

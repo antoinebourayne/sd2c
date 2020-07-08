@@ -1,12 +1,11 @@
 import os
 import getpass as gt
-import sys
 import time
 import logging
 
-from sd2c import utils, libcloud_extended
+from sd2c import utils
 from sd2c.libcloud_extended import get_provider_specific_driver
-from sd2c.utils import get_string_from_file, SSHParams
+from sd2c.utils import get_string_from_file
 
 """
 SSHCrossCloud Class
@@ -30,10 +29,8 @@ class SSHCrossCloud:
 
     def _init_variables(self, ):
         """
-        A la fin de la fonction, env possède le maximum de variables d'environement
-        calculés, pour ne plus avoir à gérer les erreurs ou les valeurs par défaut.
+        Here init variables that cannot be initialized in the SSHParams
         """
-        # Specific to entreprise polygrams
         if not self.ssh_params.polygram:
             self.ssh_params.username = gt.getuser()
         else:
@@ -43,7 +40,8 @@ class SSHCrossCloud:
         if not self.ssh_params.rsa_key_name:
             self.ssh_params.rsa_key_name = self.ssh_params.username + "-sshcrosscloud"
         if not self.ssh_params.rsa_private_key_file_path:
-            self.ssh_params.rsa_private_key_file_path = os.path.expanduser('~') + "/.ssh/" + self.ssh_params.rsa_key_name
+            self.ssh_params.rsa_private_key_file_path = os.path.expanduser('~') + "/.ssh/" \
+                                                        + self.ssh_params.rsa_key_name
 
         if not self.ssh_params.pem_ssh:
             self.ssh_params.pem_ssh = "-i " + self.ssh_params.rsa_private_key_file_path
@@ -74,11 +72,13 @@ class SSHCrossCloud:
             try:
                 # Works like a ping to know if ssh is ok
                 if self.ssh_params.verbose:
-                    ssh_return = "ssh " + self.ssh_params.ssh_fonctionnal_params + " -v " + self.ssh_params.pem_ssh + " " + \
-                                 self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + " exit && echo $?"
+                    ssh_return = "ssh " + self.ssh_params.ssh_fonctionnal_params + " -v " + self.ssh_params.pem_ssh \
+                                 + " " + self.ssh_params.instance_user + "@" + self.ssh_params.public_ip \
+                                 + " exit && echo $?"
                 else:
-                    ssh_return = "ssh " + self.ssh_params.ssh_fonctionnal_params + " " + self.ssh_params.pem_ssh + " " + \
-                                 self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + " exit && echo $?"
+                    ssh_return = "ssh " + self.ssh_params.ssh_fonctionnal_params + " " + self.ssh_params.pem_ssh \
+                                 + " " + self.ssh_params.instance_user + "@" + self.ssh_params.public_ip \
+                                 + " exit && echo $?"
 
                 return_code = os.system(ssh_return)
                 if return_code == 0:
@@ -143,20 +143,22 @@ class SSHCrossCloud:
 
         return
 
-    def attach_to_instance(self) -> int:
+    def attach_to_instance(self):
         """
         Attach to running instance, with parameters multiplex, attach or detach
 
         :return: 0 if succeed, error code from bash command
-        :rtype: ``int``
+        :rtype:
         """
+
         ssh_params = ""
         if self.ssh_params.ssh_params:
             ssh_params = self.ssh_params.ssh_params
         if self.ssh_params.verbose:
             ssh_params = ssh_params + " -v"
-        ssh_command = "ssh " + self.ssh_params.ssh_fonctionnal_params + " " + ssh_params + " " + self.ssh_params.pem_ssh + " " \
-                      + self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + " "
+        ssh_command = "ssh " + self.ssh_params.ssh_fonctionnal_params + " " + ssh_params + " " \
+                      + self.ssh_params.pem_ssh + " " + self.ssh_params.instance_user + "@" \
+                      + self.ssh_params.public_ip + " "
         if not self.ssh_params.multiplex:
             if self.ssh_params.ssh_script:
                 logging.info("ssh script : " + ssh_command + self.ssh_params.ssh_script)
@@ -232,11 +234,13 @@ class SSHCrossCloud:
         if self.ssh_params.verbose:
             command = "rsync -Pav -e 'ssh " + self.ssh_params.ssh_fonctionnal_params + " " + self.ssh_params.pem_ssh \
                       + "'" + " --exclude-from='.rsyncignore' " + self.ssh_params.rsync_directory + "/* " + \
-                      self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + ":/home/" + self.ssh_params.instance_user
+                      self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + ":/home/" \
+                      + self.ssh_params.instance_user
         else:
             command = "rsync -Pa -e 'ssh " + self.ssh_params.ssh_fonctionnal_params + " " + self.ssh_params.pem_ssh \
                       + "'" + " --exclude-from='.rsyncignore' " + self.ssh_params.rsync_directory + "/* " + \
-                      self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + ":/home/" + self.ssh_params.instance_user
+                      self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + ":/home/" \
+                      + self.ssh_params.instance_user
         return_code = os.system(command)
 
         return return_code
@@ -250,14 +254,15 @@ class SSHCrossCloud:
         """
         logging.info("Synchronizing directory back to local")
         if self.ssh_params.verbose:
-            command = "rsync -vzaP -r -e 'ssh -o StrictHostKeyChecking=no -o LogLevel=quiet " + self.ssh_params.pem_ssh \
-                      + "' " + self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + \
-                      ":/home/" + self.ssh_params.instance_user + "/*" + " " + self.ssh_params.rsync_directory
+            command = "rsync -vzaP -r -e 'ssh -o StrictHostKeyChecking=no -o LogLevel=quiet " \
+                      + self.ssh_params.pem_ssh + "' " + self.ssh_params.instance_user + "@" \
+                      + self.ssh_params.public_ip + ":/home/" + self.ssh_params.instance_user + "/*" + " " \
+                      + self.ssh_params.rsync_directory
         else:
-            command = "rsync -zaP -r -e 'ssh -o StrictHostKeyChecking=no -o LogLevel=quiet " + self.ssh_params.pem_ssh \
-                      + "' " \
-                      + self.ssh_params.instance_user + "@" + self.ssh_params.public_ip + \
-                      ":/home/" + self.ssh_params.instance_user + "/*" + " " + self.ssh_params.rsync_directory
+            command = "rsync -zaP -r -e 'ssh -o StrictHostKeyChecking=no -o LogLevel=quiet " \
+                      + self.ssh_params.pem_ssh + "' " + self.ssh_params.instance_user + "@" \
+                      + self.ssh_params.public_ip + ":/home/" + self.ssh_params.instance_user + "/*" + " " \
+                      + self.ssh_params.rsync_directory
         return_code = os.system(command)
 
         return return_code
@@ -317,8 +322,8 @@ class SSHCrossCloud:
         if self.ssh_params.provider:
             self.ssh_params.provider = self.ssh_params.provider
 
-        if self.ssh_params.l:
-            self.ssh_params.ssh_params = self.ssh_params.ssh_params + " -L " + self.ssh_params.l
+        if self.ssh_params.l_param:
+            self.ssh_params.ssh_params = self.ssh_params.ssh_params + " -L " + self.ssh_params.l_param
 
         if self.ssh_params.r:
             self.ssh_params.ssh_params = self.ssh_params.ssh_params + " -R " + self.ssh_params.r
