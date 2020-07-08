@@ -629,7 +629,7 @@ clean-venv : clean-$(VENV)
 # SNIPPET pour faire le ménage du projet (hors environnement)
 .PHONY: clean
 ## Clean current environment
-clean: clean-pyc clean-build 
+clean: clean-pyc clean-build
 
 # ---------------------------------------------------------------------------------------
 # SNIPPET pour faire le ménage du projet
@@ -827,41 +827,5 @@ TOOLS:=$(shell find sd2c/ -mindepth 2 -type f -name '*.py')
 sd2c/*.py : $(TOOLS)
 	@touch $@
 
-$(DATA)/interim/datas-prepared.csv : $(REQUIREMENTS) sd2c/prepare_dataset.py $(DATA)/raw/*
-	@python -O -m sd2c.prepare_dataset \
-		$(DATA)/raw/datas.csv \
-		$(DATA)/interim/datas-prepared.csv
-## Prepare the dataset
-prepare: $(DATA)/interim/datas-prepared.csv
-
-$(DATA)/processed/datas-features.csv : $(REQUIREMENTS) sd2c/build_features.py $(DATA)/interim/datas-prepared.csv
-	@python -O -m sd2c.build_features \
-		$(DATA)/interim/datas-prepared.csv \
-		$(DATA)/processed/datas-features.csv
-## Add features
-features: $(DATA)/processed/datas-features.csv
-
-models/model.pkl : $(REQUIREMENTS) sd2c/train_model.py $(DATA)/processed/datas-features.csv
-	@python -O -m sd2c.train_model \
-		$(SEED) \
-		$(BATCH_SIZE) \
-		$(EPOCHS) \
-		$(DATA)/processed/datas-features.csv \
-		models/model.pkl
-## Train the model
-train: models/model.pkl
-
-reports/metric.json: $(REQUIREMENTS) sd2c/evaluate_model.py models/model.pkl
-	@python -O -m sd2c.evaluate_model \
-		models/model.pkl \
-		$(DATA)/processed/datas-features.csv \
-		reports/metric.json
-## Evalutate the model
-evaluate: reports/metric.json
-
-## Visualize the result
-visualize: $(REQUIREMENTS) sd2c/visualize.py models/model.pkl
-	@python -O -m sd2c.visualize \
-	    'reports/*.metric'
 
 
