@@ -15,7 +15,7 @@ ProviderSpecific Class
 
 This class is an upgrade of libcloud to simplify the use of SSH CROSS CLOUD
 """
-
+#TODO: change default in credentials file by a custom name or just "sd2c"?
 
 class ProviderSpecific(ABC):
     """
